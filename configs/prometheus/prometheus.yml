@@ -23,8 +23,6 @@ scrape_configs:
     metrics_path: '/metrics'
     static_configs:
       - targets:
-          - 'auth-service:3001'
-          - 'crm-service:3002'
           - 'api-gate-sso:9601'
 
   # Blackbox exporter for /health endpoints
@@ -34,8 +32,6 @@ scrape_configs:
       module: [http_2xx]
     static_configs:
       - targets:
-        - 'http://auth-service:3001/health'
-        - 'http://crm-service:3002/health'
         - 'http://api-gate-sso:9601/health'
     relabel_configs:
       - source_labels: [__address__]

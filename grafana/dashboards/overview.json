@@ -170,7 +170,7 @@
       "id": 3,
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total{job=\"microservices\", instance=~\"$service.*\"}[5m])) by (instance, method, route)",
+          "expr": "sum(rate({__name__=~\".*http_requests_total\", job=\"microservices\", instance=~\"$service.*\"}[5m])) by (instance, method, route)",
           "legendFormat": "{{instance}} - {{method}} {{route}}",
           "refId": "A"
         }
@@ -201,7 +201,7 @@
       "id": 4,
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"microservices\", instance=~\"$service.*\"}[5m])) by (le, instance, route))",
+          "expr": "histogram_quantile(0.95, sum(rate({__name__=~\".*http_request_duration_seconds_bucket\", job=\"microservices\", instance=~\"$service.*\"}[5m])) by (le, instance, route))",
           "legendFormat": "{{instance}} p95 {{route}}",
           "refId": "A"
         }
@@ -232,7 +232,7 @@
       "id": 5,
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total{job=\"microservices\", status=~\"5..\", instance=~\"$service.*\"}[5m])) / sum(rate(http_requests_total{job=\"microservices\", instance=~\"$service.*\"}[5m])) or vector(0)",
+          "expr": "sum(rate({__name__=~\".*http_requests_total\", job=\"microservices\", status_code=~\"5..\", instance=~\"$service.*\"}[5m])) / sum(rate({__name__=~\".*http_requests_total\", job=\"microservices\", instance=~\"$service.*\"}[5m])) or vector(0)",
           "legendFormat": "{{instance}} Error Rate",
           "refId": "A"
         }
@@ -427,8 +427,8 @@
       "id": 10,
       "targets": [
         {
-          "expr": "sum(rate(container_cpu_usage_seconds_total{name!=\"\"}[5m])) by (name)",
-          "legendFormat": "{{name}}",
+          "expr": "sum(rate(container_cpu_usage_seconds_total{id=~\"/docker/.+\"}[5m])) by (id, name)",
+          "legendFormat": "{{name}} {{id}}",
           "refId": "A"
         }
       ],
@@ -458,8 +458,8 @@
       "id": 11,
       "targets": [
         {
-          "expr": "sum(container_memory_usage_bytes{name!=\"\"}) by (name)",
-          "legendFormat": "{{name}}",
+          "expr": "sum(container_memory_usage_bytes{id=~\"/docker/.+\"}) by (id, name)",
+          "legendFormat": "{{name}} {{id}}",
           "refId": "A"
         }
       ],
@@ -489,13 +489,13 @@
       "id": 12,
       "targets": [
         {
-          "expr": "sum(rate(container_network_receive_bytes_total{name!=\"\"}[5m])) by (name)",
-          "legendFormat": "{{name}} Receive",
+          "expr": "sum(rate(container_network_receive_bytes_total{id=~\"/docker/.+\"}[5m])) by (name) or sum(rate(container_network_receive_bytes_total{id=\"/\"}[5m])) by (interface)",
+          "legendFormat": "{{name}}{{interface}} Receive",
           "refId": "A"
         },
         {
-          "expr": "sum(rate(container_network_transmit_bytes_total{name!=\"\"}[5m])) by (name)",
-          "legendFormat": "{{name}} Transmit",
+          "expr": "sum(rate(container_network_transmit_bytes_total{id=~\"/docker/.+\"}[5m])) by (name) or sum(rate(container_network_transmit_bytes_total{id=\"/\"}[5m])) by (interface)",
+          "legendFormat": "{{name}}{{interface}} Transmit",
           "refId": "B"
         }
       ],
@@ -606,12 +606,12 @@
       "id": 15,
       "targets": [
         {
-          "expr": "100 - ((node_filesystem_avail_bytes{mountpoint=\"/rootfs\"} * 100) / node_filesystem_size_bytes{mountpoint=\"/rootfs\"})",
+          "expr": "100 - (avg by(instance) (node_filesystem_avail_bytes{fstype=~\"ext4|xfs\"}) / avg by(instance) (node_filesystem_size_bytes{fstype=~\"ext4|xfs\"}) * 100)",
           "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ],
-      "title": "Server Disk Usage (/rootfs)",
+      "title": "Server Disk Usage (ext4/xfs)",
       "type": "gauge"
     }
   ],
