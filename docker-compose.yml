@@ -81,6 +81,7 @@ services:
   tempo:
     image: grafana/tempo:latest
     container_name: tempo
+    user: "0:0"
     restart: always
     command: [ "-config.file=/etc/tempo.yaml" ]
     volumes:
