@@ -24,6 +24,11 @@ scrape_configs:
     static_configs:
       - targets:
           - 'api-gate-sso:9601'
+          - 'crm-api:9568'
+          - 'manage-quotation-api:9565'
+          - 'report-management-power-bi:9604'
+          - 'roa-roe-api:9576'
+          - 'epc-api:9566'
 
   # Blackbox exporter for /health endpoints
   - job_name: 'blackbox-http'
@@ -33,6 +38,11 @@ scrape_configs:
     static_configs:
       - targets:
         - 'http://api-gate-sso:9601/health'
+        - 'http://crm-api:9568/health'
+        - 'http://manage-quotation-api:9565/health'
+        - 'http://report-management-power-bi:9604/health'
+        - 'http://roa-roe-api:9576/health'
+        - 'http://epc-api:9566/health'
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
