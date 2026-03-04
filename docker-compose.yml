@@ -23,6 +23,12 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
+      - POSTGRES_HOST=${POSTGRES_HOST:-shared-prod-postgres}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+      - POSTGRES_USER=${POSTGRES_USER:-msiserver}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-Rubysa179596!}
+
     ports:
       - "3000:3000"
     networks:
@@ -132,9 +138,7 @@ services:
     container_name: postgres-exporter
     restart: always
     environment:
-      # Koneksi ke database PostgreSQL di container shared-prod-postgres
-      - DATA_SOURCE_NAME=postgresql://msiserver:Rubysa179596%21@shared-prod-postgres:5432/postgres?sslmode=disable
-      - PG_EXPORTER_AUTO_DISCOVER_DATABASES=true
+      - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable
     networks:
       - infra_net
 

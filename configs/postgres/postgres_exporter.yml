@@ -1,0 +1,34 @@
+pg_stat_statements:
+  query: |
+    SELECT
+      userid,
+      query,
+      calls,
+      total_exec_time,
+      mean_exec_time,
+      rows
+    FROM pg_stat_statements
+    WHERE query NOT ILIKE '%dblink%'
+      AND query NOT ILIKE '%pg_catalog%'
+      AND query NOT ILIKE '%information_schema%'
+    ORDER BY total_exec_time DESC
+    LIMIT 50
+  metrics:
+    - userid:
+        usage: "LABEL"
+        description: "User OID"
+    - query:
+        usage: "LABEL"
+        description: "SQL query text"
+    - calls:
+        usage: "COUNTER"
+        description: "Number of times executed"
+    - total_exec_time:
+        usage: "GAUGE"
+        description: "Total execution time (ms)"
+    - mean_exec_time:
+        usage: "GAUGE"
+        description: "Mean execution time (ms)"
+    - rows:
+        usage: "COUNTER"
+        description: "Total rows retrieved or affected"

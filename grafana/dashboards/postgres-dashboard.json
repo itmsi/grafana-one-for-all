@@ -1,0 +1,470 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "title": "Cache Hit Ratio",
+      "type": "stat",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  datname,\n  blks_hit,\n  blks_read,\n  CASE WHEN (blks_hit + blks_read) = 0 THEN 0\n    ELSE ROUND(blks_hit * 100.0 / (blks_hit + blks_read), 2)\n  END as hit_ratio\nFROM pg_stat_database\nWHERE blks_hit + blks_read > 0\nORDER BY hit_ratio DESC\nLIMIT 1;",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^hit_ratio$/"
+        },
+        "orientation": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "displayName": "Cache Hit Ratio",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "green",
+                "value": 95
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "title": "Active Connections",
+      "type": "piechart",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "targets": [
+        {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  COALESCE(state, 'unknown') as state,\n  COUNT(*) as count\nFROM pg_stat_activity\nWHERE pid <> pg_backend_pid()\nGROUP BY state;",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "pieType": "pie",
+        "displayLabels": [
+          "name",
+          "value"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "right"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      }
+    },
+    {
+      "title": "Total Load per Database User",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  u.usename as db_user,\n  ROUND(SUM(pss.total_exec_time)::numeric, 2) as total_time_ms,\n  SUM(pss.calls) as total_calls\nFROM pg_stat_statements pss\nJOIN pg_user u ON pss.userid = u.usesysid\nWHERE pss.query !~* 'dblink'\n  AND pss.query !~* 'pg_catalog'\n  AND pss.query !~* 'information_schema'\nGROUP BY u.usename\nORDER BY total_time_ms DESC\nLIMIT 10;",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "orientation": "auto",
+        "showValue": "auto",
+        "xField": "db_user",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          },
+          "mappings": [],
+          "unit": "ms"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "title": "Top 10 Query Paling Berat",
+      "type": "table",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "targets": [
+        {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  u.usename as db_user,\n  pss.query,\n  pss.calls,\n  ROUND(pss.total_exec_time::numeric, 2) as total_exec_time,\n  ROUND(pss.mean_exec_time::numeric, 4) as mean_exec_time\nFROM pg_stat_statements pss\nJOIN pg_user u ON pss.userid = u.usesysid\nWHERE ('$db_user' = 'All' OR u.usename = '$db_user')\n  AND pss.query !~* 'dblink'\n  AND pss.query !~* 'pg_catalog'\n  AND pss.query !~* 'information_schema'\nORDER BY pss.total_exec_time DESC\nLIMIT 10;",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false,
+            "minWidth": 100
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "total_exec_time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              },
+              {
+                "id": "displayName",
+                "value": "Total Time (ms)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "mean_exec_time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              },
+              {
+                "id": "displayName",
+                "value": "Avg Time (ms)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "query"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 600
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "title": "Slow Query (Rata-rata Terlama)",
+      "type": "table",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 13
+      },
+      "targets": [
+        {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  u.usename as db_user,\n  pss.query,\n  pss.calls,\n  ROUND(pss.mean_exec_time::numeric, 4) as mean_exec_time\nFROM pg_stat_statements pss\nJOIN pg_user u ON pss.userid = u.usesysid\nWHERE ('$db_user' = 'All' OR u.usename = '$db_user')\n  AND pss.calls > 10\n  AND pss.query !~* 'dblink'\n  AND pss.query !~* 'pg_catalog'\n  AND pss.query !~* 'information_schema'\nORDER BY pss.mean_exec_time DESC\nLIMIT 10;",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "mean_exec_time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              },
+              {
+                "id": "displayName",
+                "value": "Avg Time (ms)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "query"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 500
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "title": "Top Query per DB User",
+      "type": "table",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 13
+      },
+      "targets": [
+        {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  u.usename as db_user,\n  pss.query,\n  ROUND(pss.total_exec_time::numeric, 2) as total_exec_time,\n  pss.calls\nFROM pg_stat_statements pss\nJOIN pg_user u ON pss.userid = u.usesysid\nWHERE ('$db_user' = 'All' OR u.usename = '$db_user')\n  AND pss.query !~* 'dblink'\n  AND pss.query !~* 'pg_catalog'\n  AND pss.query !~* 'information_schema'\nORDER BY pss.total_exec_time DESC\nLIMIT 20;",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "total_exec_time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              },
+              {
+                "id": "displayName",
+                "value": "Total Time (ms)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "query"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 500
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true
+      }
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "postgres"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allValue": "All",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "All"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "postgres"
+        },
+        "definition": "SELECT DISTINCT u.usename FROM pg_stat_statements pss JOIN pg_user u ON pss.userid = u.usesysid WHERE pss.query !~* 'dblink' AND pss.query !~* 'pg_catalog' AND pss.query !~* 'information_schema' ORDER BY 1;",
+        "hide": 0,
+        "includeAll": true,
+        "label": "DB User",
+        "multi": false,
+        "name": "db_user",
+        "options": [],
+        "query": "SELECT DISTINCT u.usename FROM pg_stat_statements pss JOIN pg_user u ON pss.userid = u.usesysid WHERE pss.query !~* 'dblink' AND pss.query !~* 'pg_catalog' AND pss.query !~* 'information_schema' ORDER BY 1;",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "title": "PostgreSQL Microservices Performance",
+  "uid": "pg-performance",
+  "version": 3
+}
