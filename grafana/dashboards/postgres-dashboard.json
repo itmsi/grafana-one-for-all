@@ -135,7 +135,7 @@
         {
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  u.usename as db_user,\n  ROUND(SUM(pss.total_exec_time)::numeric, 2) as total_time_ms,\n  SUM(pss.calls) as total_calls\nFROM pg_stat_statements pss\nJOIN pg_user u ON pss.userid = u.usesysid\nWHERE pss.query !~* 'dblink'\n  AND pss.query !~* 'pg_catalog'\n  AND pss.query !~* 'information_schema'\nGROUP BY u.usename\nORDER BY total_time_ms DESC\nLIMIT 10;",
+          "rawSql": "SELECT\n  u.usename as db_user,\n  ROUND(SUM(pss.total_exec_time)::numeric, 2) as total_time_ms,\n  SUM(pss.calls) as total_calls\nFROM pg_stat_statements pss\nJOIN pg_user u ON pss.userid = u.usesysid\nWHERE pss.query !~* 'dblink'\n  AND pss.query !~* 'pg_catalog'\n  AND pss.query !~* 'information_schema'\n  AND pss.query !~* 'pg_database_size'\n  AND pss.query !~* 'pg_settings'\n  AND pss.query !~* 'CREATE EXTENSION'\n  AND pss.query !~* 'pg_statio_user_tables'\nGROUP BY u.usename\nORDER BY total_time_ms DESC\nLIMIT 10;",
           "refId": "A"
         }
       ],
@@ -187,7 +187,7 @@
         {
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  u.usename as db_user,\n  pss.query,\n  pss.calls,\n  ROUND(pss.total_exec_time::numeric, 2) as total_exec_time,\n  ROUND(pss.mean_exec_time::numeric, 4) as mean_exec_time\nFROM pg_stat_statements pss\nJOIN pg_user u ON pss.userid = u.usesysid\nWHERE ('$db_user' = 'All' OR u.usename = '$db_user')\n  AND pss.query !~* 'dblink'\n  AND pss.query !~* 'pg_catalog'\n  AND pss.query !~* 'information_schema'\nORDER BY pss.total_exec_time DESC\nLIMIT 10;",
+          "rawSql": "SELECT\n  u.usename as db_user,\n  pss.query,\n  pss.calls,\n  ROUND(pss.total_exec_time::numeric, 2) as total_exec_time,\n  ROUND(pss.mean_exec_time::numeric, 4) as mean_exec_time\nFROM pg_stat_statements pss\nJOIN pg_user u ON pss.userid = u.usesysid\nWHERE ('$db_user' = 'All' OR u.usename = '$db_user')\n  AND pss.query !~* 'dblink'\n  AND pss.query !~* 'pg_catalog'\n  AND pss.query !~* 'information_schema'\n  AND pss.query !~* 'pg_database_size'\n  AND pss.query !~* 'pg_settings'\n  AND pss.query !~* 'CREATE EXTENSION'\n  AND pss.query !~* 'pg_statio_user_tables'\nORDER BY pss.total_exec_time DESC\nLIMIT 10;",
           "refId": "A"
         }
       ],
@@ -283,7 +283,7 @@
         {
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  u.usename as db_user,\n  pss.query,\n  pss.calls,\n  ROUND(pss.mean_exec_time::numeric, 4) as mean_exec_time\nFROM pg_stat_statements pss\nJOIN pg_user u ON pss.userid = u.usesysid\nWHERE ('$db_user' = 'All' OR u.usename = '$db_user')\n  AND pss.calls > 10\n  AND pss.query !~* 'dblink'\n  AND pss.query !~* 'pg_catalog'\n  AND pss.query !~* 'information_schema'\nORDER BY pss.mean_exec_time DESC\nLIMIT 10;",
+          "rawSql": "SELECT\n  u.usename as db_user,\n  pss.query,\n  pss.calls,\n  ROUND(pss.mean_exec_time::numeric, 4) as mean_exec_time\nFROM pg_stat_statements pss\nJOIN pg_user u ON pss.userid = u.usesysid\nWHERE ('$db_user' = 'All' OR u.usename = '$db_user')\n  AND pss.calls > 10\n  AND pss.query !~* 'dblink'\n  AND pss.query !~* 'pg_catalog'\n  AND pss.query !~* 'information_schema'\n  AND pss.query !~* 'pg_database_size'\n  AND pss.query !~* 'pg_settings'\n  AND pss.query !~* 'CREATE EXTENSION'\n  AND pss.query !~* 'pg_statio_user_tables'\nORDER BY pss.mean_exec_time DESC\nLIMIT 10;",
           "refId": "A"
         }
       ],
@@ -362,7 +362,7 @@
         {
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  u.usename as db_user,\n  pss.query,\n  ROUND(pss.total_exec_time::numeric, 2) as total_exec_time,\n  pss.calls\nFROM pg_stat_statements pss\nJOIN pg_user u ON pss.userid = u.usesysid\nWHERE ('$db_user' = 'All' OR u.usename = '$db_user')\n  AND pss.query !~* 'dblink'\n  AND pss.query !~* 'pg_catalog'\n  AND pss.query !~* 'information_schema'\nORDER BY pss.total_exec_time DESC\nLIMIT 20;",
+          "rawSql": "SELECT\n  u.usename as db_user,\n  pss.query,\n  ROUND(pss.total_exec_time::numeric, 2) as total_exec_time,\n  pss.calls\nFROM pg_stat_statements pss\nJOIN pg_user u ON pss.userid = u.usesysid\nWHERE ('$db_user' = 'All' OR u.usename = '$db_user')\n  AND pss.query !~* 'dblink'\n  AND pss.query !~* 'pg_catalog'\n  AND pss.query !~* 'information_schema'\n  AND pss.query !~* 'pg_database_size'\n  AND pss.query !~* 'pg_settings'\n  AND pss.query !~* 'CREATE EXTENSION'\n  AND pss.query !~* 'pg_statio_user_tables'\nORDER BY pss.total_exec_time DESC\nLIMIT 20;",
           "refId": "A"
         }
       ],
@@ -444,14 +444,14 @@
           "type": "grafana-postgresql-datasource",
           "uid": "postgres"
         },
-        "definition": "SELECT DISTINCT u.usename FROM pg_stat_statements pss JOIN pg_user u ON pss.userid = u.usesysid WHERE pss.query !~* 'dblink' AND pss.query !~* 'pg_catalog' AND pss.query !~* 'information_schema' ORDER BY 1;",
+        "definition": "SELECT DISTINCT u.usename FROM pg_stat_statements pss JOIN pg_user u ON pss.userid = u.usesysid WHERE pss.query !~* 'dblink' AND pss.query !~* 'pg_catalog' AND pss.query !~* 'information_schema' AND pss.query !~* 'pg_database_size' AND pss.query !~* 'pg_settings' AND pss.query !~* 'CREATE EXTENSION' AND pss.query !~* 'pg_statio_user_tables' ORDER BY 1;",
         "hide": 0,
         "includeAll": true,
         "label": "DB User",
         "multi": false,
         "name": "db_user",
         "options": [],
-        "query": "SELECT DISTINCT u.usename FROM pg_stat_statements pss JOIN pg_user u ON pss.userid = u.usesysid WHERE pss.query !~* 'dblink' AND pss.query !~* 'pg_catalog' AND pss.query !~* 'information_schema' ORDER BY 1;",
+        "query": "SELECT DISTINCT u.usename FROM pg_stat_statements pss JOIN pg_user u ON pss.userid = u.usesysid WHERE pss.query !~* 'dblink' AND pss.query !~* 'pg_catalog' AND pss.query !~* 'information_schema' AND pss.query !~* 'pg_database_size' AND pss.query !~* 'pg_settings' AND pss.query !~* 'CREATE EXTENSION' AND pss.query !~* 'pg_statio_user_tables' ORDER BY 1;",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -466,5 +466,5 @@
   },
   "title": "PostgreSQL Microservices Performance",
   "uid": "pg-performance",
-  "version": 3
+  "version": 4
 }
