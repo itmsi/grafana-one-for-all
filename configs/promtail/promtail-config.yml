@@ -9,13 +9,53 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
+  # Generic Docker scraping untuk semua container
   - job_name: docker
     docker_sd_configs:
       - host: unix:///var/run/docker.sock
         refresh_interval: 5s
     relabel_configs:
       - source_labels: ['__meta_docker_container_name']
-        regex: '/(.*)'
+        regex: '/(.*)' 
         target_label: 'service_name'
       - source_labels: ['__meta_docker_container_log_stream']
         target_label: 'stream'
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+        target_label: 'compose_service'
+
+  # Khusus untuk netsuite-middleware - parse JSON log dari pino
+  - job_name: netsuite-middleware
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+        filters:
+          - name: name
+            values: ['netsuite-middleware']
+    pipeline_stages:
+      # Parse JSON log dari pino
+      - json:
+          expressions:
+            level: level
+            msg: msg
+            client_id: client_id
+            service_name: service_name
+            trace_id: traceId
+            method: method
+            url: url
+            status_code: status_code
+            duration_ms: duration_ms
+      # Set label dari field JSON
+      - labels:
+          level:
+          client_id:
+          service_name:
+      # Format timestamp dari pino (epoch ms ke nanoseconds)
+      - timestamp:
+          source: time
+          format: UnixMs
+    relabel_configs:
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)' 
+        target_label: 'container'
+      - replacement: 'netsuite-middleware'
+        target_label: 'service_name'
