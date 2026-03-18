@@ -49,6 +49,7 @@ scrape_configs:
           level:
           client_id:
           service_name:
+          status_code:
       # Format timestamp dari pino (epoch ms ke nanoseconds)
       - timestamp:
           source: time
